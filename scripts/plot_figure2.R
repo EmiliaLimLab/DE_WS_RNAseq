@@ -1,4 +1,4 @@
-# Generate main and supplementary figures for AJRCMB DE-WS research letter
+# Generate plots in figure 2 for DE-WS RNA-seq paper
 
 out_dir <- "output/"
 
@@ -25,21 +25,20 @@ deseq_pca_with_metadata <- read.delim("data/QC/GSC-2581_mergeFA_PCA.tsv",
 deseq_results_mergeFA_DE <- read.delim("data/DEA/GSC-2581_mergeFA_deseq-inclBasal-DEvsFA.tsv")
 deseq_results_mergeFA_WS <- read_delim("data/DEA/GSC-2581_mergeFA_deseq-inclBasal-WSvsFA.tsv")
 
-# GSEA results
-deseq_results_mergeFA_DE_gseKEGG <- read.delim("data/GSEA/GSC-2581_mergeFA_deseq-inclBasal-DEvsFA_GSEA-KEGG.tsv")
-deseq_results_mergeFA_WS_gseKEGG <- read.delim("data/GSEA/GSC-2581_mergeFA_deseq-inclBasal-WSvsFA_GSEA-KEGG.tsv")
-
 # Select genes involved in oxidative stress response (PMID31984210)
 # * specifically, those in Fig 1F, Nrf2 induced only
 OS_genes <- c("GPX2", "GCLC", "GCLM", "NQO1", "HMOX1", 
               "G6PD", "GSTA1", "GSTM1", "TXN", "NFE2L2", 
               "GSTP1", "CYP1B1")
 
-# Select genes related to antiviral response (PMID22398282) 
-# * only DEGs with matches in list are included here, for plotting purposes
-antiviral_genes <- c("RSAD2", "IL1RL1", "ISG15", "IFI27", "IFI6", 
-                     "IFI35", "OAS3", "OASL", "MX2", "IFIT1",
-                     "IFI44L", "OAS1")
+# Select genes related to antiviral response
+# * identified based on search of significant DEGs against anti-viral DEG lists 
+#   (PMID22398282)
+antiviral_genes <- c("HSH2D", "IL1RL1", "ISG15", "IFI27", "IFI6", 
+                     "RSAD2", "DDX60", "IFIT1", "OASL", "ST3GAL3", 
+                     "PLOD2", "CMPK2", "DPYSL3", "BCYRN1", "CYP4F11", 
+                     "FCGBP", "VPS13D", "BHLHE40", "OAS1", "IFI35", 
+                     "RPSA", "FXYD3")
 
 #-------------------------------------------------------------------------------
 # Plot A: PCA of length-scaled gene counts across all samples
@@ -146,59 +145,23 @@ deseq_results_mergeFA_upset <- ggplot(deseq_results_mergeFA_DEGs, aes(x=all_grou
   theme_combmatrix(combmatrix.label.text=element_text(size=12))
 
 #-------------------------------------------------------------------------------
-# Plot D: KEGG pathway enrichment results
-#-------------------------------------------------------------------------------
-# Data wrangling: calculate gene ratio
-deseq_results_mergeFA_DE_gseKEGG <- mutate(deseq_results_mergeFA_DE_gseKEGG, 
-                                           gene_ratio = (str_count("/") + 1) / setSize, 
-                                           direction = ifelse(NES < 0, "suppressed", "activated"), 
-                                           condition="DE vs. FA")
-
-deseq_results_mergeFA_WS_gseKEGG <- mutate(deseq_results_mergeFA_WS_gseKEGG, 
-                                           gene_ratio = (str_count("/") + 1) / setSize, 
-                                           direction = ifelse(NES < 0, "suppressed", "activated"), 
-                                           condition="WS vs. FA")
-
-
-# Generate plot
-gseKEGG_dotplot <- rbind(deseq_results_mergeFA_DE_gseKEGG, 
-                         deseq_results_mergeFA_WS_gseKEGG) %>% 
-  group_by(condition) %>% 
-  slice_head(n=10) %>% 
-  ggplot(aes(x=gene_ratio, y=str_wrap(Description, 30), fill=p.adjust, size=setSize)) + 
-  geom_point(pch=21, color='black') + 
-  facet_grid(condition ~ direction, scales="free_y", space="free_y") + 
-  scale_x_continuous(limits=c(0, 0.15), breaks=c(0, 0.05, 0.10, 0.15)) +
-  scale_fill_continuous_divergingx(palette = 'RdBu', mid = 0.05) + 
-  labs(x="Gene ratio", y="Description", fill="*P*<sub>adj</sub>", size="Set size") + 
-  theme_bw() + 
-  theme(text=element_text(size=14), 
-        axis.text.y=element_text(lineheight = 0.6), 
-        legend.title=element_markdown(), 
-        panel.spacing.x = unit(0.4, "cm", data = NULL))
-
-#-------------------------------------------------------------------------------
-# Generate main panel figure
+# Generate panel figure
 #-------------------------------------------------------------------------------
 # Generate plots
 layout <- "
 AABBBB
 AABBBB
 CCBBBB
-DDEEEE
-DDEEEE
-DDEEEE
 "
 
 panel_figure <- wrap_plots(A=sample_pca_plot, B=deseq_results_mergeFA_volcano, 
-           C=deseq_results_mergeFA_upset, D=gseKEGG_dotplot,
-           E=plot_spacer(), design = layout) + 
+           C=deseq_results_mergeFA_upset, design = layout) + 
   plot_annotation(tag_level = "A")
 
 # Create ouptut directory if it doesn't exist
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive=TRUE)
 
 # Write to file
-ggsave(paste0(out_dir, "Figure1.pdf"), plot=panel_figure, 
-       width=15, height=16, units="in", device="pdf")
+ggsave(paste0(out_dir, "Figure2.pdf"), plot=panel_figure, 
+       width=13, height=7, units="in", device="pdf")
 
