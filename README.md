@@ -1,6 +1,6 @@
 # DE_WS_RNAseq
 
-Here we present the scripts and data used in the RNA-seq analysis of our submitted manuscript entitled "Woodsmoke and diesel exhaust: distinct transcriptomic profiles in the human airway epithelium" in AJRCMB.
+Here we present the scripts and data used in the RNA-seq analysis of our submitted manuscript entitled "Woodsmoke and diesel exhaust: distinct transcriptomic profiles in the human airway epithelium" in Environment International.
 
 ## Raw sequence data, processing, and gene quantification
 
@@ -32,4 +32,6 @@ The core scRNA-seq dataset from the [HCLA](https://cellxgene.cziscience.com/coll
 Alternatively, all initial and intermediary files needed to run CIBERSORTx can be found at  https://www.bcgsc.ca/downloads/lim_lab/DE_WS_RNAseq/. Refer to the `README` for more information on each of the files.
 
 ## Figure generation
-The script used to generate plots Figure 1A-D: `scripts/plot_figure1A-D.R`.
+Script used to generate plots:
+* Figure 2: `scripts/plot_figure2.R`
+* Figure 3A: `scripts/plot_figure3A.R`
