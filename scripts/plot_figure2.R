@@ -117,46 +117,35 @@ deseq_results_mergeFA_volcano <- ggplot(deseq_results_mergeFA_volcano_data,
         legend.text=element_markdown())
 
 #-------------------------------------------------------------------------------
-# Plot C: Upset plot of common and/or different DEGs between DE and WS
+# Plot C: Venn diagram of DEGs betwen DE & WS
 #-------------------------------------------------------------------------------
-# Data wrangling: identify common and unique DEGs (padj < 0.05) that are 
-# upregulated and/or downregulated between DE and WS
-deseq_results_mergeFA_DEGs <- rbind(deseq_results_mergeFA_WS_labelled, 
-                                    deseq_results_mergeFA_DE_labelled) %>% 
-  filter(!is.na(fill_label)) %>% 
-  select(gene_id, gene_name, fill_label, facet_label) %>% 
-  separate_wider_delim(facet_label, delim=" ", too_many="drop", names=c("condition")) %>% 
-  mutate(group=paste(fill_label, " in ", condition, sep=""), .keep="unused") %>% 
-  group_by(gene_id, gene_name) %>%
-  summarize(all_groups = strsplit(paste(group, collapse=','), ",")) %>% 
-  ungroup()
+# Data wrangling: pull lists of DEGs
+deseq_results_mergeFA_DEGs <- list(DE=filter(deseq_results_mergeFA_DE_labelled, !is.na(fill_label)) %>% 
+                                     pull(gene_id),
+                                   WS=filter(deseq_results_mergeFA_WS_labelled, !is.na(fill_label)) %>% 
+                                     pull(gene_id))
 
-# Generate upset plot
-deseq_results_mergeFA_upset <- ggplot(deseq_results_mergeFA_DEGs, aes(x=all_groups)) + 
-  geom_bar(color='black', fill='#565656') +
-  geom_text(stat='count', aes(label=after_stat(count)), vjust=-0.3) + 
-  scale_x_upset() + 
-  ylim(0, 290) +
-  labs(y="Number of significant DEGs") + 
-  theme_bw() + 
-  theme(text=element_text(size=14), 
-        axis.title.x=element_blank(), 
-        legend.position="none") + 
-  theme_combmatrix(combmatrix.label.text=element_text(size=12))
+# Create Venn diagram
+deseq_results_mergeFA_venn <- plot(euler(deseq_results_mergeFA_DEGs), 
+                                   quantities=TRUE, 
+                                   as_ggplot=TRUE)
 
 #-------------------------------------------------------------------------------
 # Generate panel figure
 #-------------------------------------------------------------------------------
-# Generate plots
+# PDF (landscape): 7in x 13in
 layout <- "
 AABBBB
 AABBBB
 CCBBBB
 "
 
-panel_figure <- wrap_plots(A=sample_pca_plot, B=deseq_results_mergeFA_volcano, 
-           C=deseq_results_mergeFA_upset, design = layout) + 
-  plot_annotation(tag_level = "A")
+wrap_plots(A=sample_pca_plot, B=deseq_results_mergeFA_volcano, 
+           C=deseq_results_mergeFA_venn, design=layout) + 
+  plot_annotation(tag_level = "A") & 
+  theme(plot.tag = element_text(size = 16,
+                                hjust = 0,
+                                vjust = 1))
 
 # Create ouptut directory if it doesn't exist
 if (!dir.exists(out_dir)) dir.create(out_dir, recursive=TRUE)
