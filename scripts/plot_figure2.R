@@ -10,7 +10,7 @@ library(colorspace)
 library(ggrepel)
 library(ggpp)
 library(ggtext)
-library(ggupset)
+library(eulerr)
 library(patchwork)
 
 #-------------------------------------------------------------------------------
